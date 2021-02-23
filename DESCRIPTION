@@ -1,0 +1,19 @@
+Package: dataCollectR
+Title: Data Collector from Public Databases
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "H. Melike",
+           family = "Donertas",
+           role = c("aut", "cre"),
+           email = "donertas.melike@gmail.com",
+           comment = c(ORCID = "0000-0002-9788-6535"))
+Description: This package is essentially a wrapper for multiple R packages to
+    retrieve data from public domain. The focus is on data related to ageing,
+    microbiome, and computational biology research. The package involves 
+    functions to download, tidy, document data as well as to perform basic ID
+    conversions and ortholog mapping, utilizing other packages. 
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
