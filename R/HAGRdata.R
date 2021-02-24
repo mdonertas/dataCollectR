@@ -121,6 +121,36 @@ download_drugage <- function(outprefix = "drugage", outdir = "./") {
   return(outfile)
 }
 
+
+
+#' Tidy DrugAge Data
+#'
+#' @param path2file path to drugage csv file
+#'
+#' @return returns a data frame with 10 columns: 'organism','dataset','compound_name',
+#' 'strain','dosage','avg_lifespan_change','max_lifespan_change','gender','significance','pubmed_id'
+#' @export
+#'
+tidy_drugage <- function(path2file){
+  gendermap <- setNames(c('Male','Female','Male','Female','Both','Hermaphrodite','Pooled','Mixed',NA),
+                        c('Male','Female','MALE','FEMALE','BOTH','Hermaphrodite','Pooled','Mixed','Not Sp'))
+  signifmap <- setNames(c('ns','s','ns'),
+                        c('NS','S','0'))
+  dat <- read_csv(path2file)
+  dat <- dat %>% select(species) %>% unique() %>%
+    separate(species, into = c('genus','specific'), remove = F) %>%
+    mutate(dataset = ifelse(!is.na(specific),
+                            tolower(paste(substr(genus,1,1),specific,sep='')),
+                            NA)) %>%
+    select(species, dataset) %>%
+    right_join(dat) %>%
+    mutate(gender = gendermap[as.character(gender)],
+           significance = signifmap[as.character(significance)]) %>%
+    rename(organism = species) %>%
+    rename(chemName = compound_name)
+  return(dat)
+}
+
 #' Download CellAge Data
 #'
 #' @param outprefix prefix for the name of output file, excluding the directory,
@@ -145,6 +175,33 @@ download_cellage <- function(outprefix = "cellage", outdir = "./") {
                sep = ""))
   outfile <- path(outdir, outfile)
   return(outfile)
+}
+
+#' Tidy CellAge Data
+#'
+#' @param path2file path to cellage csv file
+#'
+#' @return returns a data frame with 7 columns: organism, dataset, Gene,
+#' cancer_type, senescence_effect, description, notes
+#' @export
+#'
+tidy_cellage <- function(path2file){
+  organismmap = setNames(c('Homo sapiens'),c('Human'))
+  cancermap = setNames(c('-','Cancer','Cancer'),
+                       c('No','yes','Yes'))
+  dat <- read_delim(path2file, delim = ';') %>%
+    select(2,5,6,7,8,9) %>%
+    rename(Gene = gene_name) %>%
+    mutate(organism = organismmap[organism])
+  dat <- dat %>% select(organism) %>% unique() %>%
+    separate(organism, into = c('genus','specific'), remove = F) %>%
+    mutate(dataset = ifelse(!is.na(specific),
+                            tolower(paste(substr(genus,1,1),specific,sep='')),
+                            NA)) %>%
+    select(organism, dataset) %>%
+    right_join(dat) %>%
+    mutate(cancer_type = cancermap[cancer_type])
+  return(dat)
 }
 
 #' Download GenAge, DrugAge, and CellAge Data
