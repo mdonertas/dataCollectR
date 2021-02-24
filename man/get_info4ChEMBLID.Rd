@@ -7,7 +7,7 @@
 get_info4ChEMBLID(ChEMBLID)
 }
 \arguments{
-\item{ChEMBLID}{}
+\item{ChEMBLID}{ChEMBLID}
 }
 \value{
 returns a data.frame with 19 columns: "ChEMBLID", "name", "type",

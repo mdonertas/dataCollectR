@@ -13,8 +13,8 @@ followed by the specific name}
 }
 \value{
 returns a list with three elements. First: \code{geneIDs}, a data frame
-with 5 columns (Gene, EnsemblID, EntrezID, UniprotID, geneType), Second:
-\code{pkginfo}, a data frame with the package version information, Third:
+with 6 columns (Gene, EnsemblID, EntrezID, UniprotID, geneType, organism),
+Second: \code{pkginfo}, a data frame with the package version information, Third:
 \code{accessdate}: date of data accession (UTC time zone).
 }
 \description{

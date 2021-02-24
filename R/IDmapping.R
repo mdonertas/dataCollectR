@@ -5,16 +5,16 @@
 #' followed by the specific name
 #'
 #' @return returns a list with three elements. First: `geneIDs`, a data frame
-#' with 5 columns (Gene, EnsemblID, EntrezID, UniprotID, geneType), Second:
-#' `pkginfo`, a data frame with the package version information, Third:
+#' with 6 columns (Gene, EnsemblID, EntrezID, UniprotID, geneType, organism),
+#' Second: `pkginfo`, a data frame with the package version information, Third:
 #' `accessdate`: date of data accession (UTC time zone).
 #'
+#' @importFrom utils packageVersion
 #' @export
 get_all_geneIDs <- function(organism = "hsapiens") {
-  withr::local_locale(c("LC_TIME" = "C"))
-  withr::local_timezone("UTC")
+  local_locale(c("LC_TIME" = "C"))
+  local_timezone("UTC")
   time <- format(Sys.time(), "%Y_%m_%d_%H_%M")
-  suppressMessages(require(tidyverse))
   ensembl <- biomaRt::useEnsembl(biomart = "genes")
   dataset <- paste(tolower(organism), "_gene_ensembl", sep = "")
   ensembl <- biomaRt::useDataset(dataset = dataset, mart = ensembl)
@@ -28,10 +28,11 @@ get_all_geneIDs <- function(organism = "hsapiens") {
     ),
     mart = ensembl
   ) %>%
-    set_names(c("Gene", "EnsemblID", "EntrezID", "UniprotID", "geneType"))
+    set_names(c("Gene", "EnsemblID", "EntrezID", "UniprotID", "geneType")) %>%
+    mutate(dataset = organism)
   pkginfo <- data.frame(package = c("biomaRt", "tidyverse")) %>%
     rowwise() %>%
-    mutate(version = utils::packageVersion(package))
+    mutate(version = packageVersion(package))
   idmap <- list(geneIDs = idmap, pkginfo = pkginfo, accessdate = time)
   return(idmap)
 }
@@ -39,15 +40,17 @@ get_all_geneIDs <- function(organism = "hsapiens") {
 #' Chemical Name to PubChem CID
 #'
 #' @param chemname Chemical name
-#'
+#' @importFrom utils URLencode
+#' @importFrom RCurl getURL
+#' @importFrom jsonlite fromJSON
 #' @return returns pubchem CID
 map_chemName2CID <- function(chemname) {
-  nm <- utils::URLencode(chemname, reserved = T)
-  name2cid <- RCurl::getURL(paste("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/",
+  nm <- URLencode(chemname, reserved = T)
+  name2cid <- getURL(paste("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/",
     nm, "/cids/JSON",
     sep = ""
   ))
-  name2cid <- jsonlite::fromJSON(name2cid)
+  name2cid <- fromJSON(name2cid)
   cid <- as.character(name2cid$IdentifierList$CID)
   return(cid)
 }
@@ -60,26 +63,25 @@ map_chemName2CID <- function(chemname) {
 #' 2 columns (chemName and CID), Second: `pkginfo`, a data frame with the
 #' package version information, Third: `accessdate`: date of data accession
 #' (UTC time zone).
-#' @import tidyverse
+#' @importFrom reshape2 melt
 #' @export
 #'
 #' @examples
 #' map_chemName2CIDs(c("metformin", "rapamycin"))
 map_chemName2CIDs <- function(chem_names) {
-  withr::local_locale(c("LC_TIME" = "C"))
-  withr::local_timezone("UTC")
+  local_locale(c("LC_TIME" = "C"))
+  local_timezone("UTC")
   time <- format(Sys.time(), "%Y_%m_%d_%H_%M")
-  suppressMessages(require(tidyverse))
   cids <- lapply(chem_names, map_chemName2CID)
   names(cids) <- chem_names
-  cids <- reshape2::melt(cids) %>%
+  cids <- melt(cids) %>%
     rename(CID = value, chemName = L1) %>%
     full_join(data.frame(chemName = as.character(chem_names))) %>%
     select(chemName, CID)
   pkginfo <- data.frame(package = c("RCurl", "jsonlite", "tidyverse",
                                     "reshape2")) %>%
     rowwise() %>%
-    mutate(version = utils::packageVersion(package))
+    mutate(version = packageVersion(package))
   cids <- list(CIDs = cids, pkginfo = pkginfo, accessdate = time)
   return(cids)
 }
@@ -90,12 +92,12 @@ map_chemName2CIDs <- function(chem_names) {
 #'
 #' @return returns ChEMBLID
 map_CID2ChEMBLID <- function(cid) {
-  nm <- utils::URLencode(cid, reserved = T)
-  cid2chembl <- RCurl::getURL(paste("https://www.ebi.ac.uk/unichem/rest/src_compound_id/",
+  nm <- URLencode(cid, reserved = T)
+  cid2chembl <- getURL(paste("https://www.ebi.ac.uk/unichem/rest/src_compound_id/",
     nm, "/22/1",
     sep = ""
   ))
-  cid2chembl <- jsonlite::fromJSON(cid2chembl)
+  cid2chembl <- fromJSON(cid2chembl)
   chembl <- as.character(cid2chembl$src_compound_id)
   return(chembl)
 }
@@ -108,26 +110,24 @@ map_CID2ChEMBLID <- function(cid) {
 #' with 2 columns (CID and ChEMBLID), Second: `pkginfo`, a data frame with the
 #' package version information, Third: `accessdate`: date of data accession
 #' (UTC time zone).
-#' @import tidyverse
 #' @export
 #'
 #' @examples
 #' map_CID2ChEMBLIDs(c("4091", "5284616"))
 map_CID2ChEMBLIDs <- function(cids) {
-  withr::local_locale(c("LC_TIME" = "C"))
-  withr::local_timezone("UTC")
+  local_locale(c("LC_TIME" = "C"))
+  local_timezone("UTC")
   time <- format(Sys.time(), "%Y_%m_%d_%H_%M")
-  suppressMessages(require(tidyverse))
   chembl <- lapply(cids, map_CID2ChEMBLID)
   names(chembl) <- cids
-  chembl <- reshape2::melt(chembl) %>%
+  chembl <- melt(chembl) %>%
     rename(ChEMBLID = value, CID = L1) %>%
     full_join(data.frame(CID = as.character(cids))) %>%
     select(CID, ChEMBLID)
   pkginfo <- data.frame(package = c("RCurl", "jsonlite", "tidyverse",
                                     "reshape2","utils")) %>%
     rowwise() %>%
-    mutate(version = utils::packageVersion(package))
+    mutate(version = packageVersion(package))
   chembl <- list(ChEMBLIDs = chembl, pkginfo = pkginfo, accessdate = time)
   return(chembl)
 }
@@ -140,25 +140,23 @@ map_CID2ChEMBLIDs <- function(cids) {
 #' with 3 columns (chemName, CID and ChEMBLID), Second: `pkginfo`, a data frame
 #' with the package version information, Third: `accessdate`: date of data
 #' accession (UTC time zone).
-#' @import tidyverse
 #' @export
 #'
 #' @examples
 #' map_chemName2ChEMBLIDs(c("metformin", "rapamycin"))
 map_chemName2ChEMBLIDs <- function(chem_names) {
-  withr::local_locale(c("LC_TIME" = "C"))
-  withr::local_timezone("UTC")
+  local_locale(c("LC_TIME" = "C"))
+  local_timezone("UTC")
   time <- format(Sys.time(), "%Y_%m_%d_%H_%M")
-  suppressMessages(require(tidyverse))
   cids <- lapply(chem_names, map_chemName2CID)
   names(cids) <- chem_names
-  cids <- reshape2::melt(cids) %>%
+  cids <- melt(cids) %>%
     rename(CID = value, chemName = L1) %>%
     full_join(data.frame(chemName = as.character(chem_names))) %>%
     select(chemName, CID)
   chembl <- lapply(unique(cids$CID), map_CID2ChEMBLID)
   names(chembl) <- unique(cids$CID)
-  chembl <- reshape2::melt(chembl) %>%
+  chembl <- melt(chembl) %>%
     rename(ChEMBLID = value, CID = L1) %>%
     full_join(data.frame(CID = as.character(cids))) %>%
     select(CID, ChEMBLID)
@@ -166,14 +164,14 @@ map_chemName2ChEMBLIDs <- function(chem_names) {
   pkginfo <- data.frame(package = c("RCurl", "jsonlite", "tidyverse",
                                     "reshape2","utils")) %>%
     rowwise() %>%
-    mutate(version = utils::packageVersion(package))
+    mutate(version = packageVersion(package))
   chembl <- list(ChEMBLIDs = chembl, pkginfo = pkginfo, accessdate = time)
   return(chembl)
 }
 
 #' Get molecule information for a ChEMBL ID
 #'
-#' @param ChEMBLID
+#' @param ChEMBLID ChEMBLID
 #'
 #' @return returns a data.frame with 19 columns: "ChEMBLID", "name", "type",
 #' "therapeutic", "first_approval", "indication_class", "max_phase",
@@ -182,15 +180,15 @@ map_chemName2ChEMBLIDs <- function(chem_names) {
 #' "synonyms"
 #'
 get_info4ChEMBLID <- function(ChEMBLID) {
-  nm <- utils::URLencode(toupper(ChEMBLID), reserved = T)
-  dat <- RCurl::getURL(paste("https://www.ebi.ac.uk/chembl/api/data/molecule/",
+  nm <- URLencode(toupper(ChEMBLID), reserved = T)
+  dat <- getURL(paste("https://www.ebi.ac.uk/chembl/api/data/molecule/",
     nm, ".json",
     sep = ""
   ))
   if(dat==''){
     dat = NA
   } else{
-    dat <- jsonlite::fromJSON(dat)
+    dat <- fromJSON(dat)
     dat <- data.frame(
       ChEMBLID = ChEMBLID,
       name = dat$pref_name,
@@ -236,17 +234,16 @@ get_info4ChEMBLID <- function(ChEMBLID) {
 #' get_info4ChEMBLIDs(c('CHEMBL413','CHEMBL1431'))
 #'
 get_info4ChEMBLIDs <- function(ChEMBLIDs){
-  withr::local_locale(c("LC_TIME" = "C"))
-  withr::local_timezone("UTC")
+  local_locale(c("LC_TIME" = "C"))
+  local_timezone("UTC")
   time <- format(Sys.time(), "%Y_%m_%d_%H_%M")
-  suppressMessages(require(tidyverse))
   info <- lapply(ChEMBLIDs, get_info4ChEMBLID)
-  info <- reshape2::melt(info, id.vars = colnames(info[[1]])) %>%
+  info <- melt(info, id.vars = colnames(info[[1]])) %>%
     select(-L1)
   pkginfo <- data.frame(package = c("RCurl", "jsonlite", "tidyverse",
                                     "reshape2","utils")) %>%
     rowwise() %>%
-    mutate(version = utils::packageVersion(package))
+    mutate(version = packageVersion(package))
   chembl <- list(ChEMBL_info = info, pkginfo = pkginfo, accessdate = time)
   return(chembl)
 }
