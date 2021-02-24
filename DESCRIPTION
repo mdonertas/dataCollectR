@@ -17,3 +17,12 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
+Imports:
+    biomaRt,
+    fs,
+    jsonlite,
+    RCurl,
+    reshape2,
+    utils,
+    tidyverse,
+    withr
