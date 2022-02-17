@@ -18,17 +18,20 @@ get_all_geneIDs <- function(organism = "hsapiens") {
   ensembl <- biomaRt::useEnsembl(biomart = "genes")
   dataset <- paste(tolower(organism), "_gene_ensembl", sep = "")
   ensembl <- biomaRt::useDataset(dataset = dataset, mart = ensembl)
+  attrlist = intersect(c(
+    "external_gene_name",
+    "ensembl_gene_id",
+    "entrezgene_id",
+    "uniprotswissprot",
+    "uniprot_gn_symbol",
+    "uniprotsptrembl",
+    "gene_biotype"
+  ), listAttributes(ensembl)$name)
   idmap <- biomaRt::getBM(
-    attributes = c(
-      "external_gene_name",
-      "ensembl_gene_id",
-      "entrezgene_id",
-      "uniprotswissprot",
-      "gene_biotype"
-    ),
+    attributes = attrlist,
     mart = ensembl
   ) %>%
-    set_names(c("Gene", "EnsemblID", "EntrezID", "UniprotID", "geneType")) %>%
+    # set_names(c("Gene", "EnsemblID", "EntrezID", "UniprotID", "geneType")) %>%
     mutate(dataset = organism)
   pkginfo <- data.frame(package = c("biomaRt", "tidyverse")) %>%
     rowwise() %>%

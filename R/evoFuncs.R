@@ -10,28 +10,29 @@
 #' (UTC time zone).
 #' @export
 #'
-get_all_human_orthologs <- function(organism = "mmusculus") {
+get_all_orthologs <- function(organism = "mmusculus", target = "hsapiens") {
   local_locale(c("LC_TIME" = "C"))
   local_timezone("UTC")
   time <- format(Sys.time(), "%Y_%m_%d_%H_%M")
   ensembl <- biomaRt::useEnsembl(biomart = "genes")
   dataset <- paste(tolower(organism), "_gene_ensembl", sep = "")
   ensembl <- biomaRt::useDataset(dataset = dataset, mart = ensembl)
+  orthogs <- paste(target, c("homolog_ensembl_gene",
+                             "homolog_orthology_type",
+                             "homolog_perc_id",
+                             "homolog_perc_id_r1",
+                             "homolog_goc_score",
+                             "homolog_wga_coverage",
+                             "homolog_orthology_confidence"), sep = "_")
   idmap <- biomaRt::getBM(
     attributes = c(
       "ensembl_gene_id",
-      "hsapiens_homolog_ensembl_gene",
-      "hsapiens_homolog_orthology_type",
-      "hsapiens_homolog_perc_id",
-      "hsapiens_homolog_perc_id_r1",
-      "hsapiens_homolog_goc_score",
-      "hsapiens_homolog_wga_coverage",
-      "hsapiens_homolog_orthology_confidence"
+      orthogs
     ),
     mart = ensembl
   ) %>%
-    set_names(c("EnsemblID", "humanEnsemblID", "Type", "humanInQuery",
-                "queryInHuman", "GOC", "WGA", "confidence")) %>%
+    # set_names(c("EnsemblID", "humanEnsemblID", "Type", "humanInQuery",
+    #             "queryInHuman", "GOC", "WGA", "confidence")) %>%
     mutate(dataset = organism)
   pkginfo <- data.frame(package = c("biomaRt", "tidyverse")) %>%
     rowwise() %>%
@@ -52,12 +53,12 @@ get_all_human_orthologs <- function(organism = "mmusculus") {
 #' Third: `accessdate`: date of data accession (UTC time zone).
 #' @export
 #'
-tidy_orthologs <- function(organism = 'mmusculus') {
+tidy_orthologs <- function(organism = 'mmusculus', target = 'hsapiens') {
   local_locale(c("LC_TIME" = "C"))
   local_timezone("UTC")
   time <- format(Sys.time(), "%Y_%m_%d_%H_%M")
   idmap <- get_all_geneIDs(organism = organism)
-  ortholog <- get_all_human_orthologs(organism = organism)
+  ortholog <- get_all_orthologs(organism = organism, target = target)
   pkginfo <- data.frame(package = c("biomaRt", "tidyverse")) %>%
     rowwise() %>%
     mutate(version = packageVersion(package))
