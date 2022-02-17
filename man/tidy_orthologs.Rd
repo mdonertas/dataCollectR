@@ -4,7 +4,7 @@
 \alias{tidy_orthologs}
 \title{Get all IDs and human orthologs for an organism}
 \usage{
-tidy_orthologs(organism = "mmusculus")
+tidy_orthologs(organism = "mmusculus", target = "hsapiens")
 }
 \arguments{
 \item{organism}{name of the organism: first letter of the genus immediately
