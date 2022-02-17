@@ -23,8 +23,6 @@ get_all_geneIDs <- function(organism = "hsapiens") {
     "ensembl_gene_id",
     "entrezgene_id",
     "uniprotswissprot",
-    "uniprot_gn_symbol",
-    "uniprotsptrembl",
     "gene_biotype",
     "description"
   ), biomaRt::listAttributes(ensembl)$name)
