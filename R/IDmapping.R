@@ -23,6 +23,7 @@ get_all_geneIDs <- function(organism = "hsapiens") {
     "ensembl_gene_id",
     "entrezgene_id",
     "uniprotswissprot",
+    "uniprot_gn_id",
     "gene_biotype",
     "description"
   ), biomaRt::listAttributes(ensembl)$name)
@@ -30,7 +31,7 @@ get_all_geneIDs <- function(organism = "hsapiens") {
     attributes = attrlist,
     mart = ensembl
   ) %>%
-    # set_names(c("Gene", "EnsemblID", "EntrezID", "UniprotID", "geneType")) %>%
+    # set_names(c("Gene", "EnsemblID", "EntrezID", "SwissProtID", "UniprotID", "geneType")) %>%
     mutate(dataset = organism)
   pkginfo <- data.frame(package = c("biomaRt", "tidyverse")) %>%
     rowwise() %>%
