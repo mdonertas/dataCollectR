@@ -25,7 +25,8 @@ get_all_geneIDs <- function(organism = "hsapiens") {
     "uniprotswissprot",
     "uniprot_gn_id",
     "gene_biotype",
-    "description"
+    "description",
+    "external_synonym"
   ), biomaRt::listAttributes(ensembl)$name)
   idmap <- biomaRt::getBM(
     attributes = attrlist,
