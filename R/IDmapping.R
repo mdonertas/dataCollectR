@@ -25,7 +25,7 @@ get_all_geneIDs <- function(organism = "hsapiens") {
     "ensembl_gene_id",
     "entrezgene_id",
     "uniprotswissprot",
-    "uniprot_gn_id",
+    # "uniprot_gn_id",
     "uniprotsptrembl",
     # "external_synonym",
     "gene_biotype",
