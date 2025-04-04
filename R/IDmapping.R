@@ -5,9 +5,11 @@
 #' followed by the specific name
 #'
 #' @return returns a list with three elements. First: `geneIDs`, a data frame
-#' with 6 columns (Gene, EnsemblID, EntrezID, UniprotID, geneType, organism),
-#' Second: `pkginfo`, a data frame with the package version information, Third:
-#' `accessdate`: date of data accession (UTC time zone).
+#' with 9 columns (external_gene_name, ensembl_gene_id, entrezgene_id,
+#' uniprotswissprot, uniprot_gn_id, external_synonym, gene_biotype, and
+#' description, organism). Second: `pkginfo`, a data frame with the package
+#' version information, Third: `accessdate`: date of data accession (UTC time 
+#' zone).
 #'
 #' @importFrom utils packageVersion
 #' @export
@@ -24,15 +26,14 @@ get_all_geneIDs <- function(organism = "hsapiens") {
     "entrezgene_id",
     "uniprotswissprot",
     "uniprot_gn_id",
+    "external_synonym",
     "gene_biotype",
-    "description",
-    "external_synonym"
+    "description"
   ), biomaRt::listAttributes(ensembl)$name)
   idmap <- biomaRt::getBM(
     attributes = attrlist,
     mart = ensembl
   ) %>%
-    # set_names(c("Gene", "EnsemblID", "EntrezID", "SwissProtID", "UniprotID", "geneType")) %>%
     mutate(dataset = organism)
   pkginfo <- data.frame(package = c("biomaRt", "tidyverse")) %>%
     rowwise() %>%

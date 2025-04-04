@@ -31,8 +31,6 @@ get_all_orthologs <- function(organism = "mmusculus", target = "hsapiens") {
     ),
     mart = ensembl
   ) %>%
-    # set_names(c("EnsemblID", "humanEnsemblID", "Type", "humanInQuery",
-    #             "queryInHuman", "GOC", "WGA", "confidence")) %>%
     mutate(dataset = organism)
   pkginfo <- data.frame(package = c("biomaRt", "tidyverse")) %>%
     rowwise() %>%
